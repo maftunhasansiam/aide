@@ -1,0 +1,77 @@
+// Prisma schema for Aide
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ENUMS
+enum TaskStatus {
+  pending
+  completed
+  overdue
+}
+
+enum Priority {
+  low
+  medium
+  high
+}
+
+enum ActorType {
+  user
+  aide
+  system
+}
+
+// TASKS
+model Task {
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String?
+  status       TaskStatus @default(pending)
+  priority     Priority   @default(medium)
+  createdAt    DateTime   @default(now())
+  completedAt  DateTime?
+  dueAt        DateTime?
+  metadata     Json?
+
+  reminders    Reminder[]
+  logs         ActivityLog[]
+}
+
+// REMINDERS
+model Reminder {
+  id        Int      @id @default(autoincrement())
+  task      Task     @relation(fields: [taskId], references: [id])
+  taskId    Int
+  remindAt  DateTime
+  isSent    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  metadata  Json?
+}
+
+// ACTIVITY LOGS
+model ActivityLog {
+  id         Int       @id @default(autoincrement())
+  timestamp  DateTime  @default(now())
+  actor      ActorType
+  eventType  String
+  summary    String?
+  data       Json?
+
+  task       Task?     @relation(fields: [taskId], references: [id])
+  taskId     Int?
+}
+
+// CHAT HISTORY
+model ChatHistory {
+  id        Int       @id @default(autoincrement())
+  role      ActorType
+  message   String
+  timestamp DateTime  @default(now())
+  metadata  Json?
+}
